@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zlewnia Węgorzy</title>
+<meta name="description" content="Dlaczego zlewnia Węgorzy (dopływ Łeby) podawana jest jako 57,3 km², a Wody Polskie podają 72,6 km². Źródła, obliczenia, mapa.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 20c5-8 9 4 14-4s9 2 12-3' fill='none' stroke='%232a7ab8' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1d2327; --muted:#5d666d; --line:#dedbd2;
+  --accent:#1f6fa8; --warn:#b4541a; --ok:#2e7d4f; --soft:#eef3f7;
+  --c-jcwp:#1f6fa8; --c-gorna:#2e7d4f; --c-roz:#d9822b; --c-weg:#0b4f86; --c-wiel:#c2410c; --c-leba:#6b7280;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15191c; --card:#1d2226; --ink:#e7e9ea; --muted:#9aa4ab; --line:#2e353a;
+    --accent:#6cb2e6; --warn:#f0a36b; --ok:#6cc690; --soft:#1f2a33;
+    --c-jcwp:#6cb2e6; --c-gorna:#6cc690; --c-roz:#f0a36b; --c-weg:#9bd0ff; --c-wiel:#ff8a5c; --c-leba:#a3acb3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15191c; --card:#1d2226; --ink:#e7e9ea; --muted:#9aa4ab; --line:#2e353a;
+  --accent:#6cb2e6; --warn:#f0a36b; --ok:#6cc690; --soft:#1f2a33;
+  --c-jcwp:#6cb2e6; --c-gorna:#6cc690; --c-roz:#f0a36b; --c-weg:#9bd0ff; --c-wiel:#ff8a5c; --c-leba:#a3acb3;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+h1{font:600 clamp(26px,5vw,38px)/1.15 "Source Serif 4",Georgia,serif;margin:6px 0 10px;letter-spacing:-.01em}
+h2{font:600 22px/1.25 "Source Serif 4",Georgia,serif;margin:38px 0 10px}
+.kicker{color:var(--muted);font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.lead{font-size:19px;color:var(--ink);margin:0 0 18px}
+.answer{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:16px 18px;margin:18px 0}
+.answer p{margin:.3em 0}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+.num{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.num b{display:block;font:700 34px/1.1 "Source Sans 3",sans-serif;font-variant-numeric:tabular-nums}
+.num span{color:var(--muted);font-size:15px}
+.num.a b{color:var(--c-jcwp)} .num.b b{color:var(--c-gorna)} .num.c b{color:var(--c-roz)}
+#map{height:460px;border-radius:10px;border:1px solid var(--line);background:var(--soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted);margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.legend i.l{height:4px;vertical-align:3px;border-radius:2px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:16px}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:14px;background:var(--soft)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:color-mix(in srgb,var(--warn) 12%,transparent);font-weight:600}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto;border-radius:10px}
+ol.steps{padding-left:22px} ol.steps li{margin:8px 0}
+.note{font-size:15px;color:var(--muted)}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:4px;margin-right:6px;vertical-align:2px}
+.tag.fakt{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.tag.wniosek{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+a{color:var(--accent)}
+.src li{margin:8px 0}
+.src small{color:var(--muted)}
+footer{margin-top:40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:14px}
+.leaflet-container{font:14px "Source Sans 3",sans-serif}
+@media (max-width:560px){#map{height:360px} body{font-size:16px} .num b{font-size:30px}}
+</style>
+</head>
+<body>
+<main>
+<div class="kicker">Hydrografia · Pobrzeże Kaszubskie · dorzecze Łeby</div>
+<h1>Zlewnia Węgorzy: 72,6 czy 57,3&nbsp;km²?</h1>
+<p class="lead">Wody Polskie podają dla Węgorzy (dopływu Łeby) zlewnię 72,6&nbsp;km². Wikipedia i Google podają 57,3&nbsp;km². Obie liczby mają źródło, ale opisują co innego.</p>
+
+<div class="answer">
+<p><b>W skrócie:</b> zlewnia Węgorzy przy ujściu do Łeby to <b>ok. 72,6&nbsp;km²</b>, razem z dopływem Wielistowską Strugą.</p>
+<p>Wartość 57,3&nbsp;km² nie pochodzi z pomiaru Węgorzy. To różnica dwóch liczb z tabeli dla <i>Łeby</i> w opracowaniu IMGW z 2004&nbsp;r., które brało je z „Podziału Hydrograficznego Polski” z 1983&nbsp;r. W tamtym podziale Węgorzy brakuje ok. 15&nbsp;km², czyli prawie dokładnie zlewni Wielistowskiej Strugi.</p>
+</div>
+
+<div class="nums">
+  <div class="num a"><b>72,6 km²</b><span>Węgorza przy ujściu do Łeby (Wody Polskie, JCWP RW200010476189)</span></div>
+  <div class="num b"><b>57,1 km²</b><span>Węgorza tuż <i>powyżej</i> ujścia Wielistowskiej Strugi (obliczenie z modelu terenu)</span></div>
+  <div class="num c"><b>≈ 15,5 km²</b><span>Różnica, czyli zlewnia Wielistowskiej Strugi i krótki odcinek do ujścia</span></div>
+</div>
+
+<div id="map" role="img" aria-label="Mapa zlewni Węgorzy z podziałem na część powyżej ujścia Wielistowskiej Strugi i zlewnię Wielistowskiej Strugi"></div>
+<div class="legend">
+  <span><i style="background:var(--c-gorna);opacity:.55"></i>Węgorza powyżej Wielistowskiej Strugi (57,1 km²)</span>
+  <span><i style="background:var(--c-roz);opacity:.6"></i>Wielistowska Struga + odcinek do ujścia (≈15,5 km²)</span>
+  <span><i style="border:2px solid var(--c-jcwp);background:transparent"></i>Granica zlewni JCWP (72,6 km²)</span>
+  <span><i class="l" style="background:var(--c-weg)"></i>Węgorza</span>
+  <span><i class="l" style="background:var(--c-wiel)"></i>Wielistowska Struga</span>
+  <span><i class="l" style="background:var(--c-leba)"></i>Łeba</span>
+</div>
+
+<h2>1. Wielistowska Struga jest dopływem Węgorzy</h2>
+<p><span class="tag fakt">fakt</span>Węgorza zaczyna się koło Kętrzyna, płynie przez Rozłazino i Jezioro Lubowidzkie i uchodzi do Łeby przy Węgorni. Wielistowska Struga płynie od Wielistowa przez Godętowo i wpada do Węgorzy ok. 1,5&nbsp;km przed jej ujściem, poniżej jeziora.</p>
+<p>Tak przebiega linia JCWP Wód Polskich i tak samo opisuje to Wikipedia. Hasło „Wielistowska Struga” mówi wprost, że „uchodzi do Węgorzy”. Błąd, o którym piszą oba hasła, dotyczy <i>nazwy</i>: na mapach z lat 1960–2012 samą Wielistowską Strugę podpisywano jako „Węgorza”. Nie chodzi o to, czy jest dopływem.</p>
+
+<h2>2. Skąd wzięło się 57,3 km²</h2>
+<p><span class="tag fakt">fakt</span>Wikipedia cytuje opracowanie IMGW z lat 2003/2004 dla RZGW Gdańsk („Wyznaczenie granic bezpośredniego zagrożenia powodzią… – ŁEBA”). Opracowanie nie podaje zlewni Węgorzy. W tabeli 6 (s.&nbsp;14) podaje zlewnie <b>Łeby</b> w kolejnych punktach, przejęte z „Podziału Hydrograficznego Polski” IMGW z 1983&nbsp;r., który opracowano na mapach 1:50&nbsp;000:</p>
+<div class="tw"><table>
+<tr><th>Punkt na Łebie (tabela 6)</th><th class="n">Zlewnia Łeby</th></tr>
+<tr><td>Przed dopływem Węgorzy</td><td class="n">389,00 km²</td></tr>
+<tr><td>Za dopływem Węgorzy</td><td class="n">446,30 km²</td></tr>
+<tr class="hl"><td>Różnica = „zlewnia Węgorzy” w Wikipedii</td><td class="n">57,30 km²</td></tr>
+</table></div>
+<p class="note">W ten sam sposób, przez odjęcie, powstały liczby w innych hasłach cytujących to opracowanie. Dębnica: 122,4&nbsp;−&nbsp;74,6&nbsp;=&nbsp;47,8. Kisewska Struga: 702,4&nbsp;−&nbsp;566,4&nbsp;=&nbsp;136,0.</p>
+
+<h2>3. Porównanie z obecnymi danymi</h2>
+<p><span class="tag fakt">fakt</span>Te same różnice na aktualnych danych: zlewnie JCWP Wód Polskich i obliczenia z modelu terenu.</p>
+<div class="tw"><table>
+<tr><th>Ciek</th><th class="n">Podział 1983 (przez IMGW 2004)</th><th class="n">Dziś</th><th class="n">Różnica</th></tr>
+<tr><td>Kisewska Struga</td><td class="n">136,0</td><td class="n">136,6</td><td class="n">&lt;1%</td></tr>
+<tr><td>Dębnica</td><td class="n">47,8</td><td class="n">45,8</td><td class="n">4%</td></tr>
+<tr class="hl"><td>Węgorza</td><td class="n">57,3</td><td class="n">72,6</td><td class="n">−21%</td></tr>
+<tr><td>Łeba przed / za Węgorzą</td><td class="n">389,0 / 446,3</td><td class="n">341,6 / 414,2</td><td class="n">—</td></tr>
+</table></div>
+<p>U innych dopływów stare liczby zgadzają się z obecnymi w granicach dokładności map 1:50&nbsp;000. Węgorzy brakuje <b>15,3&nbsp;km²</b>, a obliczona zlewnia Wielistowskiej Strugi ma <b>ok.&nbsp;15,1–15,5&nbsp;km²</b>.</p>
+
+<h2>4. Wyjaśnienie</h2>
+<p><span class="tag wniosek">wniosek</span>Najbardziej prawdopodobne wyjaśnienie: w podziale z 1983&nbsp;r. zlewnię Wielistowskiej Strugi przypisano bezpośrednio do Łeby, a nie do Węgorzy. Te ~15&nbsp;km² trafiły do punktu „Łeba przed dopływem Węgorzy”, więc różnica wyszła 57,3 zamiast ~72,6&nbsp;km².</p>
+<p>Przemawiają za tym dwie rzeczy:</p>
+<ol class="steps">
+<li>Brakujące pole zgadza się ze zlewnią Wielistowskiej Strugi co do kilku dziesiątych km².</li>
+<li>Górny koniec Wielistowskiej Strugi leży ok. 175&nbsp;m od Łeby, w jej dolinie przy jazie Wielistowo (km&nbsp;76,1 Łeby). Są tam sieci rowów melioracyjnych, a na ówczesnych mapach nazwy tych cieków były pomylone. W takim miejscu przypisanie terenu do jednej albo drugiej rzeki łatwo się rozjeżdża.</li>
+</ol>
+<p class="note">Samego podziału z 1983&nbsp;r. (arkusza z granicami zlewni) nie sprawdzono, więc to wniosek, a nie potwierdzony fakt. Rozstrzygnęłoby go spojrzenie na arkusz „Podziału Hydrograficznego Polski” dla tego rejonu.</p>
+
+<h2>5. Którą liczbę stosować</h2>
+<ul>
+<li><b>72,6&nbsp;km²</b>: zlewnia Węgorzy przy ujściu do Łeby. Zgodna z definicją zlewni, z danymi Wód Polskich i z obliczeniem z terenu (72,2&nbsp;km² ok. 0,5&nbsp;km przed ujściem do Łeby).</li>
+<li><b>57,1–57,3&nbsp;km²</b>: poprawne tylko dla przekroju na Węgorzy <i>powyżej</i> ujścia Wielistowskiej Strugi.</li>
+</ul>
+<p>Hasło w Wikipedii podaje 57,3&nbsp;km² jako zlewnię całej Węgorzy, co jest niespójne ze współczesnymi danymi. Warto je uzupełnić o to, do jakiego przekroju i podziału ta wartość się odnosi.</p>
+
+<h2>Źródła</h2>
+<ol class="src">
+<li>IMGW Oddz. Morski w Gdyni / Oddz. w Poznaniu (2003/2004): <i>Wyznaczenie granic bezpośredniego zagrożenia powodzią w celu uzasadnionego odtworzenia terenów zalewowych – ŁEBA. Część opisowa</i>, dla RZGW w Gdańsku. Tabela 6, s.&nbsp;14–15.<br>
+<a href="http://web.archive.org/web/2id_/http://gdansk.rzgw.gov.pl/cms/site.files/file/OKI/publikacjaMap/Leba/Lebaopisopracowania.pdf">Web Archive</a> · <a href="zrodla/IMGW_2004_Leba_opis_opracowania.pdf">kopia PDF</a> <small>(oryginalny serwis RZGW już nie działa)</small></li>
+<li>Wody Polskie: <i>Karta charakterystyki JCWP RW200010476189 „Węgorza”</i>. Powierzchnia zlewni JCWP 72,56&nbsp;km².<br>
+<a href="http://karty.apgw.gov.pl:4200/api/v1/jcw/pdf?code=RW200010476189">karty.apgw.gov.pl</a> · <a href="zrodla/Karta_JCWP_RW200010476189.pdf">kopia PDF</a></li>
+<li>KZGW / Wody Polskie: warstwy <i>JCWP rzeczne</i> i <i>Zlewnie JCWP rzecznych</i> (geobaza aPGW, Hydroportal): przebieg Węgorzy, Wielistowskiej Strugi i Łeby oraz granica zlewni.</li>
+<li>Wikipedia: <a href="https://pl.wikipedia.org/wiki/W%C4%99gorza_(dop%C5%82yw_%C5%81eby)">Węgorza (dopływ Łeby)</a>, <a href="https://pl.wikipedia.org/wiki/Wielistowska_Struga">Wielistowska Struga</a>, <a href="https://pl.wikipedia.org/wiki/D%C4%99bnica_(dop%C5%82yw_%C5%81eby)">Dębnica (dopływ Łeby)</a>, <a href="https://pl.wikipedia.org/wiki/Kisewska_Struga">Kisewska Struga</a>.</li>
+<li>IMGW (1983/1986): <i>Podział Hydrograficzny Polski</i>, red. J.&nbsp;Stachy. Źródło powierzchni w tabeli 6 opracowania z pkt&nbsp;1 (nie oglądany bezpośrednio).</li>
+<li>OpenStreetMap: sieć rowów przy górnym końcu Wielistowskiej Strugi.</li>
+</ol>
+
+<h2>Jak liczono</h2>
+<p class="note">Zlewnie w punktach obliczono w HydroPunkcie na warstwach JCWP Wód Polskich z numerycznym modelem terenu GUGiK (rozdzielczość 5&nbsp;m, cieki wypalone w terenie). Punkty: Węgorza 150&nbsp;m powyżej ujścia Wielistowskiej Strugi (54,5685°N 17,8418°E) → 57,09&nbsp;km²; Węgorza ok. 0,5&nbsp;km przed ujściem do Łeby (54,5673°N 17,8266°E) → 72,19&nbsp;km²; Łeba ±300&nbsp;m od ujścia Węgorzy → 341,6 / 414,2&nbsp;km². Geometrie na mapie są uproszczone (~15&nbsp;m).</p>
+
+<footer>Opracowanie: 30 września 2026 · <a href="https://zlewniapl.lakis.pro/">HydroPunkt</a> · Mapa: © współtwórcy OpenStreetMap</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  var css=getComputedStyle(document.documentElement);
+  var c=function(n){return css.getPropertyValue(n).trim();};
+  var map=L.map('map',{scrollWheelZoom:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+  var style={
+    zlewnia_jcwp:{color:c('--c-jcwp'),weight:2.5,fill:false,dashArray:'6 4'},
+    zlewnia_gorna:{color:c('--c-gorna'),weight:1,fillColor:c('--c-gorna'),fillOpacity:.28},
+    roznica:{color:c('--c-roz'),weight:1,fillColor:c('--c-roz'),fillOpacity:.38},
+    jezioro:{color:'#3b82c4',weight:1,fillColor:'#7fb6e6',fillOpacity:.7},
+    wegorza:{color:c('--c-weg'),weight:3.5},
+    wielistowska:{color:c('--c-wiel'),weight:3.5},
+    leba:{color:c('--c-leba'),weight:4}
+  };
+  var label={
+    zlewnia_jcwp:'Zlewnia JCWP Węgorza: 72,56 km² (Wody Polskie)',
+    zlewnia_gorna:'Węgorza powyżej ujścia Wielistowskiej Strugi: 57,09 km²',
+    roznica:'Wielistowska Struga + odcinek do ujścia: ≈15,5 km²',
+    jezioro:'Jezioro Lubowidzkie', wegorza:'Węgorza', wielistowska:'Wielistowska Struga', leba:'Łeba'
+  };
+  var order=['zlewnia_gorna','roznica','jezioro','zlewnia_jcwp','leba','wielistowska','wegorza'];
+  fetch('data.geojson').then(function(r){return r.json();}).then(function(d){
+    var bounds=null;
+    order.forEach(function(rola){
+      d.features.filter(function(f){return f.properties.rola===rola;}).forEach(function(f){
+        var lyr=L.geoJSON(f,{style:style[rola]}).bindTooltip(label[rola],{sticky:true}).addTo(map);
+        if(rola==='zlewnia_jcwp') bounds=lyr.getBounds();
+      });
+    });
+    map.fitBounds(bounds,{padding:[10,10]});
+    [[54.5685,17.8384,'Ujście Wielistowskiej Strugi do Węgorzy'],
+     [54.5689,17.8196,'Ujście Węgorzy do Łeby (Węgornia)'],
+     [54.5802,17.9209,'Górny koniec Wielistowskiej Strugi, ~175 m od Łeby (rejon jazu Wielistowo)']]
+    .forEach(function(p){L.circleMarker([p[0],p[1]],{radius:6,color:'#fff',weight:2,fillColor:'#111',fillOpacity:.9}).bindTooltip(p[2]).addTo(map);});
+  }).catch(function(){document.getElementById('map').textContent='Nie udało się wczytać mapy.';});
+})();
+</script>
+</body>
+</html>
